@@ -1,6 +1,25 @@
+<#
+.SYNOPSIS
+Bootstrap script for downloading and applying personal config files for programming.
+
+.EXAMPLE
+.config/bootstrap.ps1 # download and apply *all* templates
+.config/bootstrap.ps1 -Selection git,vs # download and apply *only* "vs" and "git" templates
+
+Known templates are:
+- `git`
+  Contains default git ignore files
+- `prettier`
+  Contains prettier config and ignore files
+- `vs`
+  Contains project defaults and dotnet tool config
+
+The selected template options will be stored in `.config/.bootstrap.config.json`
+
+#> 
 param (
     [string] $OutputDirectory,
-    [string[]] $Selection = $(),
+    [string[]] $Selection = $null,
     [string] $SourceUrl = 'https://github.com/Gitii/config/archive/refs/heads/main.zip' 
 )
 
@@ -94,9 +113,41 @@ function Extract-Config($TargetDirectory, $Url, $Selection) {
     }
 }
 
+function Get-Defaults() {
+    $defaultsFile = Join-Path $(Join-Path $(Get-ScriptFolder) ".config") ".bootstrap.config.json"
+
+    if (Test-Path $defaultsFile) {
+        return $(ConvertFrom-Json ($Get-Content $defaultsFile))
+    } else {
+        return @{
+            Selection = @()
+        }
+    }
+}
+
+function Set-Defaults($Selection) {
+    $defaultsFolder = Join-Path $(Get-ScriptFolder) ".config"
+
+    New-Item -ItemType Directory $fullTargetDirectory -Force | Out-Null
+
+    $defaultsFile = Join-Path $defaultsFolder ".bootstrap.config.json"
+
+    @{ Selection = $Selection } | ConvertTo-Json | Output-File $defaultsFile -Encoding Ascii
+}
+
 $targetDir = if ($OutputDirectory) { $OutputDirectory } else { Get-Location }
 
+if ($Selection -eq null) {
+    $defaults = Get-Defaults()
+
+    $Selection = $defaults.Selection
+}
+
 Extract-Config -TargetDirectory $targetDir -Url $SourceUrl -Selection $Selection
+
+Set-Defaults -Selection $Selection
+
+# Automatically restore dotnet tools when
 
 try {
     Push-Location $targetDir
