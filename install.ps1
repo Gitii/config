@@ -1,8 +1,8 @@
-$targetDirectory = Join-Path Get-Location ".config"
+$targetDirectory = Join-Path $(Get-Location) ".config"
 $bootStrapFilePath = Join-Path $targetDirectory "bootstrap.ps1"
 $sourceUrl = if ($env:SOURCE_URL) { $env:SOURCE_URL } else { "https://raw.githubusercontent.com/Gitii/config/main/bootstrap.ps1" }
 
-New-Item -ItemType Directory -Path $targetDirectory | Out-Null
+New-Item -ItemType Directory -Path $targetDirectory -Force | Out-Null
 
 Invoke-WebRequest -Uri $sourceUrl -OutFile $bootStrapFilePath 
 
