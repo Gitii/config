@@ -1,3 +1,9 @@
+param (
+    [string] $OutputDirectory,
+    [string[]] $Selection = $(),
+    [string] $SourceUrl = 'https://github.com/Gitii/config/archive/refs/heads/main.zip' 
+)
+
 function Get-ScriptFolder() {
     $fp = $PSScriptRoot
 
@@ -47,12 +53,12 @@ function Extract-Zip($ArchivePath, $TargetDirectory) {
 
 }
 
-function Extract-Config($TargetDirectory) {
+function Extract-Config($TargetDirectory, $Url, $Selection) {
     $tempFile = New-TemporaryFile
     $tempFolder = New-TemporaryDirectory
 
     try {
-        $url = 'https://github.com/Gitii/config/archive/refs/heads/main.zip' 
+        $url = $Url
 
         Write-Host "Downloading..."
         Invoke-WebRequest -Uri $url -OutFile $tempFile.FullName
@@ -60,11 +66,27 @@ function Extract-Config($TargetDirectory) {
         Write-Host "Extracting to $tempFolder..."
         Extract-Zip -ArchivePath $tempFile.FullName -TargetDirectory $tempFolder
 
-        $templateFolder = Join-Path $tempFolder "config-main" "templates"
+        $templateFolder = Join-Path $(Join-Path $tempFolder "config-main") "templates"
 
-        Write-Host "Copying templates to $TargetDirectory"
-        Get-ChildItem -Path $templateFolder -Force | Copy-Item -Recurse -Destination $TargetDirectory -Force
+        
+        if ($Selection -eq null -or $Selection.Length -eq 0 -or $Selection[0] -ieq "all") {
+            # nothing selected, copy everything
+            Write-Host "Copying all templates to $TargetDirectory"
+            Get-ChildItem -Path $templateFolder -Force | Copy-Item -Recurse -Destination $TargetDirectory -Force
+        } else {
+            
+            $Selection | { 
+                $SelectedFolder = Join-Path $templateFolder $_
+                if (-! Test-Path $SelectedFolder) {
+                    Write-Error "Template $_ doesn't exist"
+                    continue
+                }
 
+                Write-Host "Copying template $_ to $TargetDirectory"
+                Get-Item $SelectedFolder | Copy-Item -Recurse -Destination $TargetDirectory -Force 
+            
+            }
+        }
     } finally {
         $tempFile.Delete()
 
@@ -72,6 +94,20 @@ function Extract-Config($TargetDirectory) {
     }
 }
 
-$targetDir = Get-Location
+$targetDir = if ($OutputDirectory) { $OutputDirectory } else { Get-Location }
 
-Extract-Config -TargetDirectory $targetDir
+Extract-Config -TargetDirectory $targetDir -Url $SourceUrl -Selection $Selection
+
+try {
+    Push-Location $targetDir
+
+    Write-Host "Restoring dotnet tools..."
+    dotnet tool restore
+
+} finally {
+    Pop-Location
+}
+
+
+
+
