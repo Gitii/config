@@ -1,21 +1,20 @@
 <#
 .SYNOPSIS
-Bootstrap script for downloading and applying personal config files for programming.
+    Bootstrap script for downloading and applying personal config files for programming.
 
 .EXAMPLE
-.config/bootstrap.ps1 # download and apply *all* templates
-.config/bootstrap.ps1 -Selection git,vs # download and apply *only* "vs" and "git" templates
+    .config/bootstrap.ps1 # download and apply *all* templates
+    .config/bootstrap.ps1 -Selection git,vs # download and apply *only* "vs" and "git" templates
 
-Known templates are:
-- `git`
-  Contains default git ignore files
-- `prettier`
-  Contains prettier config and ignore files
-- `vs`
-  Contains project defaults and dotnet tool config
+    Known templates are:
+    - `git`
+      Contains default git ignore files
+    - `prettier`
+      Contains prettier config and ignore files
+    - `vs`
+      Contains project defaults and dotnet tool config
 
-The selected template options will be stored in `.config/.bootstrap.config.json`
-
+    The selected template options will be stored in `.config/.bootstrap.config.json`
 #> 
 param (
     [string] $OutputDirectory,
