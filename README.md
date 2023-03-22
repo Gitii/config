@@ -6,7 +6,7 @@ A template repository that contains settings, config files and scripts that I us
 
 Execute the boostrap script in the project root folder:
 ```powershell
-iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/Gitii/config/main/bootstrap.ps1'))
+iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/Gitii/config/main/install.ps1'))
 ```
 
 This command will download the bootstrap powershell script and store it in `.config/bootstrap.ps1`.
