@@ -68,7 +68,6 @@ function Extract-Zip($ArchivePath, $TargetDirectory) {
     }
 
     $ar.Dispose()
-
 }
 
 function Extract-Config($TargetDirectory, $Url, $Selection) {
@@ -84,13 +83,14 @@ function Extract-Config($TargetDirectory, $Url, $Selection) {
         Write-Host "Extracting to $tempFolder..."
         Extract-Zip -ArchivePath $tempFile.FullName -TargetDirectory $tempFolder
 
-        $templateFolder = Join-Path $(Join-Path $tempFolder "config-main") "templates"
+        $RootFolder = $(Get-ChildItem $tempFolder).FullName
 
-        
+        $templateFolder = Join-Path $RootFolder "templates"
+
         if ($Selection -eq $null -or $Selection.Length -eq 0 -or $Selection[0] -ieq "all") {
             # nothing selected, copy everything
             Write-Host "Copying all templates to $TargetDirectory"
-            Get-ChildItem -Path $templateFolder -Force | Copy-Item -Recurse -Destination $TargetDirectory -Force
+            Get-ChildItem -Path $templateFolder -Force | % { Get-ChildItem -Path $_ } | Copy-Item -Recurse -Destination $TargetDirectory -Force
         } else {
             
             $Selection | % { 
@@ -113,10 +113,10 @@ function Extract-Config($TargetDirectory, $Url, $Selection) {
 }
 
 function Get-Defaults() {
-    $defaultsFile = Join-Path $(Join-Path $(Get-ScriptFolder) ".config") ".bootstrap.config.json"
+    $defaultsFile = Join-Path $(Get-ScriptFolder) "bootstrap.config.json"
 
     if (Test-Path $defaultsFile) {
-        return $(ConvertFrom-Json (Get-Content $defaultsFile))
+        return $(ConvertFrom-Json (Get-Content -Raw $defaultsFile))
     } else {
         return @{
             Selection = @()
@@ -125,11 +125,8 @@ function Get-Defaults() {
 }
 
 function Set-Defaults($Selection) {
-    $defaultsFolder = Join-Path $(Get-ScriptFolder) ".config"
-
-    New-Item -ItemType Directory $defaultsFolder -Force | Out-Null
-
-    $defaultsFile = Join-Path $defaultsFolder ".bootstrap.config.json"
+    $defaultsFolder = Get-ScriptFolder
+    $defaultsFile = Join-Path $defaultsFolder "bootstrap.config.json"
 
     @{ Selection = $Selection } | ConvertTo-Json | Out-File $defaultsFile -Encoding Ascii
 }
@@ -140,6 +137,8 @@ if ($Selection -eq $null) {
     $defaults = Get-Defaults
 
     $Selection = $defaults.Selection
+    Write-Host "Using stored defaults:"
+    Write-Host $(ConvertTo-Json $defaults)
 }
 
 Extract-Config -TargetDirectory $targetDir -Url $SourceUrl -Selection $Selection
@@ -157,7 +156,3 @@ try {
 } finally {
     Pop-Location
 }
-
-
-
-
