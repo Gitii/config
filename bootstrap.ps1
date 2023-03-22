@@ -87,21 +87,21 @@ function Extract-Config($TargetDirectory, $Url, $Selection) {
         $templateFolder = Join-Path $(Join-Path $tempFolder "config-main") "templates"
 
         
-        if ($Selection -eq null -or $Selection.Length -eq 0 -or $Selection[0] -ieq "all") {
+        if ($Selection -eq $null -or $Selection.Length -eq 0 -or $Selection[0] -ieq "all") {
             # nothing selected, copy everything
             Write-Host "Copying all templates to $TargetDirectory"
             Get-ChildItem -Path $templateFolder -Force | Copy-Item -Recurse -Destination $TargetDirectory -Force
         } else {
             
-            $Selection | { 
+            $Selection | % { 
                 $SelectedFolder = Join-Path $templateFolder $_
-                if (-! Test-Path $SelectedFolder) {
-                    Write-Error "Template $_ doesn't exist"
+                if (-! $(Test-Path $SelectedFolder)) {
+                    Write-Error "Template $_ doesn't exist ($SelectedFolder)"
                     continue
                 }
 
                 Write-Host "Copying template $_ to $TargetDirectory"
-                Get-Item $SelectedFolder | Copy-Item -Recurse -Destination $TargetDirectory -Force 
+                Get-ChildItem -Path $SelectedFolder | Copy-Item -Recurse -Destination $TargetDirectory -Force 
             
             }
         }
@@ -116,7 +116,7 @@ function Get-Defaults() {
     $defaultsFile = Join-Path $(Join-Path $(Get-ScriptFolder) ".config") ".bootstrap.config.json"
 
     if (Test-Path $defaultsFile) {
-        return $(ConvertFrom-Json ($Get-Content $defaultsFile))
+        return $(ConvertFrom-Json (Get-Content $defaultsFile))
     } else {
         return @{
             Selection = @()
@@ -127,17 +127,17 @@ function Get-Defaults() {
 function Set-Defaults($Selection) {
     $defaultsFolder = Join-Path $(Get-ScriptFolder) ".config"
 
-    New-Item -ItemType Directory $fullTargetDirectory -Force | Out-Null
+    New-Item -ItemType Directory $defaultsFolder -Force | Out-Null
 
     $defaultsFile = Join-Path $defaultsFolder ".bootstrap.config.json"
 
-    @{ Selection = $Selection } | ConvertTo-Json | Output-File $defaultsFile -Encoding Ascii
+    @{ Selection = $Selection } | ConvertTo-Json | Out-File $defaultsFile -Encoding Ascii
 }
 
 $targetDir = if ($OutputDirectory) { $OutputDirectory } else { Get-Location }
 
-if ($Selection -eq null) {
-    $defaults = Get-Defaults()
+if ($Selection -eq $null) {
+    $defaults = Get-Defaults
 
     $Selection = $defaults.Selection
 }
