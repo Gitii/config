@@ -4,6 +4,6 @@ $sourceUrl = if ($env:SOURCE_URL) { $env:SOURCE_URL } else { "https://raw.github
 
 New-Item -ItemType Directory -Path $targetDirectory -Force | Out-Null
 
-Invoke-WebRequest -Uri $sourceUrl -OutFile $bootStrapFilePath 
+Invoke-WebRequest -Uri $sourceUrl -OutFile $bootStrapFilePath  
 
 Write-Host "Downloaded, please execute .config/bootstrap.ps1 for further installation."
