@@ -17,8 +17,5 @@ That script will download this repository (as zip archive) and put the contents 
 
 To update to the latest `templates` version, execute the script (from the root folder of the project):
 ```powershell
-pwsh ./.my-config/update.ps1
+pwsh ./.config/bootstrap.ps1
 ```
-
-This script will do the same thing as `bootstrap.ps1` (from the Getting Started step)  
-and download the latest files and overwrite any local changes.
